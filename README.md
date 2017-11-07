@@ -26,6 +26,7 @@ External JavaScript files must have **data-src** attribute instead of src attrib
 ```
 
 **Expire attribute**
+
 Cache scripts for 1800 seconds (30 minutes) 
 Default value is 3600 
 ```javascript
