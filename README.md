@@ -15,18 +15,20 @@ console.log('hello from localscript');
 </script>
  ```
 
-External JavaScript files must have **data-src** instead of src attribute
+External JavaScript files must have **data-src** attribute instead of src attribute 
 ```javascript
 <script type="text/localscript" data-src="your.js.min.js"></script>
 ```
 
-How to include localscript.js
+**How to include localscript.js**
 ```javascript
 <script defer src="js/localscript.js"></script>
 ```
 
-Expire attribute
+**Expire attribute**
+Cache scripts for 1800 seconds (30 minutes) 
+Default value is 3600 
 ```javascript
-<script defer src="js/localscript.js" data-expire="600"></script>
+<script defer src="js/localscript.js" data-expire="1800"></script>
 ```
-Cache scripts for 600 seconds 
+ 
