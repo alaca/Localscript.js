@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>localscript</title>
+
+    <!-- include localscript.js -->
+    <script defer src="js/localscript.js"></script>
+
+    </head>
+    <body>
+
+
+        <h1>
+           Localscript
+        </h1>
+
+        <div id="content"></div>
+
+
+        <script type="text/localscript" data-src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+
+        <script type="text/localscript">
+
+            $('#content').text('hello from localscript');
+
+        </script>
+
+    </body>
+
+</html>
