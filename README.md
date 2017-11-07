@@ -26,10 +26,9 @@ External JavaScript files must have **data-src** attribute instead of src attrib
 ```
 
 **Expire attribute**
-
-Cache scripts for 1800 seconds (30 minutes) 
-Default value is 3600 
 ```javascript
 <script defer src="js/localscript.js" data-expire="1800"></script>
 ```
+Cache scripts for 1800 seconds (30 minutes) 
+Default value is 3600 
  
