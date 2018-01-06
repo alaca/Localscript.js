@@ -1,5 +1,6 @@
 /* localscript.js [c]2017 Ante Laca */
 (function(w){ 
+    
     'use strict';
 
     var d = w.document,
@@ -13,13 +14,12 @@
         scripts.forEach(function(script){
 
             var promise = new Promise(function(resolve, reject){
-
                 // cache only external javascript
                 if (script.url) {
-
+                    // get code
                     var code = ls ? ls.getItem(script.url) : null; 
                     // url is not in storage or local storage is not supported
-                    if (null === code) { 
+                    if (code === null) { 
 
                         var xhr = new XMLHttpRequest();
 
@@ -32,40 +32,36 @@
                                     try {
                                         ls.setItem(script.url, xhr.response);  
                                     } catch(e) {
-                                        // storage is probably full, flush it out
-                                        ls.clear();
+                                        ls.clear(); // storage is probably full, flush it
                                     }
                                 }
 
                                 resolve(xhr.response);
 
                             } else {
-                                reject(Error(xhr.statusText));
+                                reject(new Error(xhr.responseURL + ' ' + xhr.statusText));
                             }
 
                         };
 
                         xhr.send();
-
+     
                     } else {
                         resolve(code);
                     }
-
+                    
                 } else {
                     resolve(script.code);
                 }
-
+          
             });
-
             // add promise
             promises.push(promise);
 
         });
-
         // return promises
         return Promise.all(promises);
-
-    }
+    };
 
     // hook up
     d.addEventListener('DOMContentLoaded', function(){
@@ -99,11 +95,13 @@
         get(data).then(function(codes){
             for(var i in codes) {
                 try {
-                    (0, eval)(codes[i]);
+                    (0, eval)(codes[i]); // execute scripts in global scope
                 } catch(e) {
                     console.log(e.name, e.message);
                 }
             }
+        }).catch(function(error){
+            console.log(error);
         });
 
     }, false);
