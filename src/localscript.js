@@ -3,62 +3,73 @@
     
     'use strict';
 
-    var d = w.document,
-        ls = w.localStorage,
+    const d = w.document,
+        ls = w.localStorage || false,
         self = d.currentScript || d.querySelector('script[data-expire]');
 
-    var get = function(scripts) {
+    const get = scripts => {
 
-        var promises = [];
+        let promises = [];
 
-        scripts.forEach(function(script){
+        scripts.forEach(script => {
 
-            var promise = new Promise(function(resolve, reject){
-                // cache only external javascript
-                if (script.url) {
-                    // get code
-                    var code = ls ? ls.getItem(script.url) : null; 
-                    // url is not in storage or local storage is not supported
-                    if (code === null) { 
+            let promise = new Promise((resolve, reject) => {
 
-                        var xhr = new XMLHttpRequest();
+                // inline script
+                if ( ! script.url) {
+                    return resolve(script.code);
+                }
 
-                        xhr.open('get', script.url);
-                        xhr.onload = function(){
-                            // check status
-                            if (xhr.status == 200) {
-                                // if local storage
-                                if (ls) {
-                                    try {
-                                        ls.setItem(script.url, xhr.response);  
-                                    } catch(e) {
-                                        ls.clear(); // storage is probably full, flush it
-                                    }
+                // cache only external scripts
+                let code = ls ? ls.getItem(script.url) : null; 
+                // url is not in storage or local storage is not supported
+                if (code === null) { 
+
+                    let xhr = new XMLHttpRequest();
+
+                    xhr.open('get', script.url);
+                    xhr.onload = function(){
+
+                        // check status
+                        if (xhr.status == 200) {
+                            // if local storage
+                            if (ls) {
+                                try {
+                                    ls.setItem(script.url, JSON.stringify(xhr.response));  
+                                } catch(e) {
+                                    ls.clear(); // storage is probably full, flush it
                                 }
-
-                                resolve(xhr.response);
-
-                            } else {
-                                reject(new Error(xhr.responseURL + ' ' + xhr.statusText));
                             }
 
-                        };
+                            return resolve(xhr.response);
 
-                        xhr.send();
-     
-                    } else {
-                        resolve(code);
-                    }
-                    
+                        }
+
+                        return reject(new Error(xhr.responseURL + ' ' + xhr.statusText));
+
+                    };
+
+                    // xhr never timeout, so we do it ourselves
+                    setTimeout(() => {
+                        if (xhr.readyState < 4) {
+                            xhr.abort();
+                            return reject(new Error(script.url + ' timeout'));
+                        }
+                    }, 10000);
+
+                    xhr.send();
+    
                 } else {
-                    resolve(script.code);
+                    return resolve(JSON.parse(code));
                 }
-          
+                    
             });
+            
             // add promise
             promises.push(promise);
 
         });
+
         // return promises
         return Promise.all(promises);
     };
@@ -66,12 +77,12 @@
     // hook up
     d.addEventListener('DOMContentLoaded', function(){
 
-        var data = [],
-            scripts = d.getElementsByTagName('script');
+        let scripts = [],
+            tags = d.getElementsByTagName('script');
 
         // check if local storage is supported
         if (ls) {
-            var time = Math.floor(new Date().getTime() / 1000),
+            const time = Math.floor(new Date().getTime() / 1000),
                 expire = ls.getItem('ls-expire'),
                 expire_in = self.getAttribute('data-expire') || 3600;  // expire in seconds
             // clear if data is expired
@@ -82,25 +93,29 @@
         }
 
         // process all script tags
-        for(var i in scripts) {
-            if (scripts[i].type == 'text/localscript') {
-                data.push({
-                    url : scripts[i].getAttribute('data-src') || null,
-                    code : scripts[i].innerHTML || null
+        for(let i in tags) {
+            if (tags[i].type == 'text/localscript') {
+                scripts.push({
+                    url : tags[i].getAttribute('data-src') || false,
+                    code : tags[i].innerHTML || null
                 });
             }
         }
 
         // run
-        get(data).then(function(codes){
-            for(var i in codes) {
+        get(scripts).then(codes => {
+
+            for(let i in codes) {
                 try {
-                    (0, eval)(codes[i]); // execute scripts in global scope
+                    // execute scripts in global scope
+                    (0, eval)(codes[i]); 
+                    
                 } catch(e) {
                     console.log(e.name, e.message);
                 }
             }
-        }).catch(function(error){
+
+        }).catch(error => {
             console.log(error);
         });
 
