@@ -5,7 +5,8 @@
 
     const d = w.document,
         ls = w.localStorage || false,
-        self = d.currentScript || d.querySelector('script[data-expire]');
+        self = d.currentScript || d.querySelector('script[data-expire]'),
+        cache = self.getAttribute('data-cache') === 'false' ? false : true;
 
     const get = scripts => {
 
@@ -14,41 +15,36 @@
         scripts.forEach(script => {
 
             let promise = new Promise((resolve, reject) => {
-
                 // inline script
                 if ( ! script.url) {
                     return resolve(script.code);
                 }
-
                 // cache only external scripts
-                let code = ls ? ls.getItem(script.url) : null; 
-                // url is not in storage or local storage is not supported
+                let code = (ls && cache) ? ls.getItem(script.url) : null; 
+
                 if (code === null) { 
 
                     let xhr = new XMLHttpRequest();
 
                     xhr.open('get', script.url);
                     xhr.onload = function(){
-
                         // check status
                         if (xhr.status == 200) {
                             // if local storage
-                            if (ls) {
+                            if (ls && cache) {
                                 try {
-                                    ls.setItem(script.url, JSON.stringify(xhr.response));  
+                                    ls.setItem(script.url, xhr.response);  
                                 } catch(e) {
                                     ls.clear(); // storage is probably full, flush it
                                 }
                             }
 
                             return resolve(xhr.response);
-
                         }
 
                         return reject(new Error(xhr.responseURL + ' ' + xhr.statusText));
 
                     };
-
                     // xhr never timeout, so we do it ourselves
                     setTimeout(() => {
                         if (xhr.readyState < 4) {
@@ -60,7 +56,7 @@
                     xhr.send();
     
                 } else {
-                    return resolve(JSON.parse(code));
+                    return resolve(code);
                 }
                     
             });
