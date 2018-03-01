@@ -71,7 +71,7 @@
     };
 
     // hook up
-    d.addEventListener('DOMContentLoaded', function(){
+    d.addEventListener('DOMContentLoaded', () => {
 
         let scripts = [],
             tags = d.getElementsByTagName('script');
